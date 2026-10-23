@@ -2,9 +2,6 @@ import { Component, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
 
 const hasWebGL = () => {
   try {
@@ -18,6 +15,7 @@ const hasWebGL = () => {
 class Boundary extends Component {
   state = { failed: false }
   static getDerivedStateFromError() { return { failed: true } }
+  componentDidCatch() { this.props.onError?.() }
   render() { return this.state.failed ? this.props.fallback : this.props.children }
 }
 
@@ -29,6 +27,7 @@ function createParticles(count) {
   const starts = new Float32Array(count * 3)
   const sizes = new Float32Array(count)
   const colors = new Float32Array(count * 3)
+  const arrivals = new Float32Array(count)
   const palette = ['#FFFFFF', '#DADADA', '#AFAFAF', '#777777'].map((hex) => new THREE.Color(hex))
   const leftCount = Math.round(count * 0.39)
   const rightCount = Math.round(count * 0.39)
@@ -53,14 +52,21 @@ function createParticles(count) {
     targets[k] = x + nx * width
     targets[k + 1] = y + ny * width
     targets[k + 2] = depth
-    starts[k] = (random() - 0.5) * 7
-    starts[k + 1] = (random() - 0.5) * 5
-    starts[k + 2] = (random() - 0.5) * 5
+    const edge = Math.floor(random() * 4)
+    if (edge < 2) {
+      starts[k] = (edge === 0 ? -1 : 1) * (4.2 + random() * 4.5)
+      starts[k + 1] = (random() - 0.5) * 7.5
+    } else {
+      starts[k] = (random() - 0.5) * 9
+      starts[k + 1] = (edge === 2 ? -1 : 1) * (2.8 + random() * 4)
+    }
+    starts[k + 2] = (random() - 0.5) * 4
     sizes[i] = 0.012 + random() * 0.016
+    arrivals[i] = random() * 0.62
     const color = palette[random() < 0.045 ? 1 : random() < 0.18 ? 2 : random() < 0.12 ? 3 : 0]
     colors[k] = color.r; colors[k + 1] = color.g; colors[k + 2] = color.b
   }
-  return { targets, starts, sizes, colors }
+  return { targets, starts, sizes, colors, arrivals }
 }
 
 function createRidge(seed) {
@@ -229,7 +235,7 @@ function DriftParticles({ interaction, mobile, reducedMotion }) {
   )
 }
 
-function ParticleA({ mobile, reducedMotion, visible }) {
+function ParticleA({ mobile, reducedMotion, visible, onIntroComplete }) {
   const mesh = useRef(null)
   const sweep = useRef(null)
   const cameraRig = useRef({ theta: -0.58, phi: Math.PI / 2.05, radius: mobile ? 6.6 : 5.55, progress: 0 })
@@ -237,7 +243,7 @@ function ParticleA({ mobile, reducedMotion, visible }) {
   const visibleRef = useRef(visible)
   const { camera, invalidate } = useThree()
   const count = mobile ? 720 : 3200
-  const { targets, starts, sizes, colors } = useMemo(() => createParticles(count), [count])
+  const { targets, starts, sizes, colors, arrivals } = useMemo(() => createParticles(count), [count])
   const dummy = useMemo(() => new THREE.Object3D(), [])
   const color = useMemo(() => new THREE.Color(), [])
   const clock = useRef(0)
@@ -265,33 +271,25 @@ function ParticleA({ mobile, reducedMotion, visible }) {
       camera.lookAt(0, 0, 0)
     }
     placeCamera()
-    let context
+    let timeline
     if (!reducedMotion) {
-      const trigger = document.getElementById('top')
-      context = gsap.context(() => {
-        const timeline = gsap.timeline({
-          scrollTrigger: {
-            trigger,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: 1,
-            invalidateOnRefresh: true,
-          },
-          onUpdate: () => { if (visibleRef.current) invalidate() },
-        })
-        timeline.to(cameraState, { progress: 1, duration: 0.38, ease: 'none' }, 0)
-        timeline.to(cameraState, { theta: 0.68, phi: Math.PI / 2.18, radius: mobile ? 6.6 : 4.9, duration: 0.64, ease: 'none' }, 0.08)
-        timeline.to(cameraState, { theta: 0.12, phi: Math.PI / 2.05, radius: mobile ? 6.6 : 5.3, duration: 0.36, ease: 'none' }, 0.64)
-        if (sweep.current) timeline.fromTo(sweep.current.position, { x: -2.5 }, { x: 2.5, duration: 0.52, ease: 'none' }, 0.12)
-      }, trigger || undefined)
+      timeline = gsap.timeline({
+        onUpdate: () => { if (visibleRef.current) invalidate() },
+        onComplete: onIntroComplete,
+      })
+      timeline.to(cameraState, { progress: 1, duration: 4.1, ease: 'power3.inOut' }, 0)
+      timeline.to(cameraState, { theta: 0.38, phi: Math.PI / 2.18, radius: mobile ? 6.6 : 5, duration: 2.1, ease: 'sine.inOut' }, 0.8)
+      timeline.to(cameraState, { theta: 0.12, phi: Math.PI / 2.05, radius: mobile ? 6.6 : 5.3, duration: 1.2, ease: 'sine.inOut' }, 2.9)
+      if (sweep.current) timeline.fromTo(sweep.current.position, { x: -2.5 }, { x: 2.5, duration: 3.5, ease: 'sine.inOut' }, 0.4)
     } else {
       cameraState.progress = 1
       cameraState.theta = 0.12
       cameraState.radius = mobile ? 6.6 : 5.3
+      onIntroComplete?.()
     }
     if (visibleRef.current) invalidate()
-    return () => context?.revert()
-  }, [camera, colors, count, invalidate, mobile, reducedMotion, color])
+    return () => timeline?.kill()
+  }, [camera, colors, count, invalidate, mobile, reducedMotion, color, onIntroComplete])
 
   useEffect(() => {
     if (mobile || reducedMotion) return undefined
@@ -310,11 +308,13 @@ function ParticleA({ mobile, reducedMotion, visible }) {
     const time = clock.current
     for (let i = 0; i < count; i++) {
       const k = i * 3
-      const shimmer = Math.sin(time * 1.6 + i * 0.17) * 0.008 * progress
+      const arrival = THREE.MathUtils.clamp((progress - arrivals[i] * 0.48) / (1 - arrivals[i] * 0.48), 0, 1)
+      const morph = arrival * arrival * (3 - 2 * arrival)
+      const shimmer = Math.sin(time * 1.6 + i * 0.17) * 0.008 * morph
       dummy.position.set(
-        THREE.MathUtils.lerp(starts[k], targets[k], progress) + shimmer,
-        THREE.MathUtils.lerp(starts[k + 1], targets[k + 1], progress) + shimmer * 0.5,
-        THREE.MathUtils.lerp(starts[k + 2], targets[k + 2], progress),
+        THREE.MathUtils.lerp(starts[k], targets[k], morph) + shimmer,
+        THREE.MathUtils.lerp(starts[k + 1], targets[k + 1], morph) + shimmer * 0.5,
+        THREE.MathUtils.lerp(starts[k + 2], targets[k + 2], morph),
       )
       const size = sizes[i] * (0.82 + 0.18 * Math.sin(time * 1.8 + i * 0.13))
       dummy.scale.setScalar(size)
@@ -335,13 +335,13 @@ function ParticleA({ mobile, reducedMotion, visible }) {
       <pointLight ref={sweep} position={[-2.5, 0.25, 1.4]} color="#F2F2F2" intensity={5} distance={4} decay={2} />
       <instancedMesh ref={mesh} args={[undefined, undefined, count]} frustumCulled={false}>
         <sphereGeometry args={[1, 7, 6]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.68} roughness={0.28} emissive="#160c24" emissiveIntensity={0.18} />
+        <meshStandardMaterial color="#ffffff" metalness={0.68} roughness={0.28} emissive="#141414" emissiveIntensity={0.18} />
       </instancedMesh>
     </group>
   )
 }
 
-export default function Hero3D() {
+export default function Hero3D({ onReady, onIntroComplete, onError }) {
   const [visible, setVisible] = useState(true)
   const [webglAvailable] = useState(() => hasWebGL())
   const host = useRef(null)
@@ -358,11 +358,18 @@ export default function Hero3D() {
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    if (webglAvailable) return undefined
+    onReady?.()
+    onIntroComplete?.()
+    return undefined
+  }, [onIntroComplete, onReady, webglAvailable])
+
   if (!webglAvailable) return fallback
   return (
     <div className="hero__canvas" ref={host}>
-      <Boundary fallback={fallback}>
-        <Canvas frameloop={visible && !reducedMotion ? 'always' : 'demand'} dpr={mobile ? 1 : [1, 1.35]} camera={{ position: [0, 0, mobile ? 6.6 : 5.55], fov: mobile ? 44 : 38 }} gl={{ alpha: true, antialias: !mobile, powerPreference: 'low-power' }}>
+      <Boundary fallback={fallback} onError={onError}>
+        <Canvas onCreated={() => onReady?.()} frameloop={visible && !reducedMotion ? 'always' : 'demand'} dpr={mobile ? 1 : [1, 1.35]} camera={{ position: [0, 0, mobile ? 6.6 : 5.55], fov: mobile ? 44 : 38 }} gl={{ alpha: true, antialias: !mobile, powerPreference: 'low-power' }}>
           <color attach="background" args={['#090909']} />
           <ambientLight intensity={0.62} />
           <directionalLight position={[3, 4, 5]} intensity={2.4} color="#FFFFFF" />
@@ -372,7 +379,7 @@ export default function Hero3D() {
           <MountainRange seed={73} z={-6.8} color="#222222" />
           <Lake interaction={interaction} reducedMotion={reducedMotion} />
           <DriftParticles interaction={interaction} mobile={mobile} reducedMotion={reducedMotion} />
-          <ParticleA mobile={mobile} reducedMotion={reducedMotion} visible={visible} />
+          <ParticleA mobile={mobile} reducedMotion={reducedMotion} visible={visible} onIntroComplete={onIntroComplete} />
           <PointerInteraction interaction={interaction} visible={visible} reducedMotion={reducedMotion} />
         </Canvas>
       </Boundary>

@@ -12,8 +12,8 @@ a { color: inherit; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .skip { position: absolute; left: 1rem; top: -4rem; background: $white; color: $black; padding: .6rem 1rem; z-index: 100; &:focus { top: 1rem; } }
 
-.meta { color: $gray-text; font-size: .9rem; }
-.h2 { font: 700 clamp(2rem, 5vw, 4rem)/1.05 $display; font-stretch: 125%; letter-spacing: -0.02em; max-width: 18ch; margin-bottom: 3rem; }
+.meta { color: $gray-text; font-size: .9rem; font-weight: 500; }
+.h2 { font: 700 clamp(2rem, 5vw, 4rem)/1.05 $display; letter-spacing: -0.02em; max-width: 18ch; margin-bottom: 3rem; }
 .h3 { font: 600 clamp(1.25rem, 2vw, 1.6rem)/1.2 $body; margin-bottom: .6rem; }
 .section { position: relative; isolation: isolate; padding: var(--gap) var(--pad) 0; max-width: 1600px; margin-inline: auto;
   &::before { content: ''; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%); background: $black; }
@@ -46,27 +46,34 @@ a { color: inherit; }
 // Nav
 .nav { position: fixed; inset: 0 0 auto; z-index: 50; display: flex; justify-content: space-between; align-items: center; padding: 1rem var(--pad); mix-blend-mode: normal; background: linear-gradient($black, transparent);
   &--light { color: #111111; background: linear-gradient(#F1F1F1, transparent); .nav__toggle { border-color: rgba(#111111, .22); } .nav__menu { background: #F1F1F1; a[aria-current='true'] { color: #555555; } } }
-  &__logo { font: 700 1.05rem $display; font-stretch: 125%; text-decoration: none; }
+  &__logo { font: 700 1.05rem $display; text-decoration: none; }
   &__toggle { background: none; color: inherit; border: 1px solid $line; border-radius: 999px; min-height: 44px; padding: 0 1.1rem; font: inherit; cursor: pointer; @include up(800px) { display: none; } }
-  &__menu { position: fixed; inset: 0; background: $black; display: none; flex-direction: column; justify-content: center; gap: 1.2rem; padding: var(--pad); font: 700 2.2rem $display; font-stretch: 125%; z-index: -1;
+  &__menu { position: fixed; inset: 0; background: $black; display: none; flex-direction: column; justify-content: center; gap: 1.2rem; padding: var(--pad); font: 500 2.2rem $body; z-index: -1;
     &.is-open { display: flex; }
     a { text-decoration: none; &[aria-current='true'] { color: $violet-text; } }
     @include up(800px) { position: static; display: flex; flex-direction: row; align-items: center; gap: 1.75rem; padding: 0; background: none; font: 500 .95rem $body; z-index: auto;
       a { padding: .5rem 0; &:hover { color: $violet-text; } } } }
   &__cta { @include up(800px) { border: 1px solid $white; border-radius: 999px; padding: .5rem 1.1rem !important; &:hover { background: $violet; border-color: $violet; color: $white !important; } } } }
 
-// A sticky, image-free lake scene stays behind the freely scrolling home story.
-.hero { position: relative; background: $black; min-height: 340svh; overflow: clip; color: $white;
+// A single-screen intro stages the particle formation before revealing identity.
+.hero { position: relative; background: $black; min-height: 100svh; overflow: clip; color: $white;
   &__stage { position: sticky; z-index: 0; top: 0; height: 100svh; margin-bottom: -100svh; overflow: hidden; background: linear-gradient(180deg, #080808 0%, #101010 56%, #090909 100%); pointer-events: none; }
   &__scene { position: absolute; inset: 0; pointer-events: none; canvas { display: block; } }
   &__canvas { position: absolute; inset: 0; pointer-events: auto; }
   &__fallback { position: absolute; top: 7%; left: 50%; width: min(44vw, 31rem); height: min(55vh, 31rem); transform: translateX(-50%); opacity: .82; background-image: radial-gradient(circle, rgba($white, .88) 1.1px, transparent 1.55px); background-size: 10px 10px; clip-path: polygon(35% 0, 65% 0, 100% 100%, 78% 100%, 68% 72%, 32% 72%, 22% 100%, 0 100%); }
   &__waterline { position: absolute; inset: 61% 0 auto; height: 1px; background: linear-gradient(90deg, transparent, rgba($white, .25), transparent); }
-  &__chapter { position: relative; z-index: 1; min-height: 80svh; padding: 8rem var(--pad); display: flex; align-items: center; justify-content: space-between; gap: 2rem; pointer-events: none; }
-  &__chapter--identity { min-height: 100svh; align-items: flex-end; padding-bottom: 3rem; }
-  &__content { width: 100%; max-width: 1600px; margin-inline: auto; pointer-events: auto; }
-  &__loc { color: #CACACA; margin-bottom: 1rem; font-size: .88rem; }
-  &__name { width: fit-content; max-width: 58vw; font: 800 clamp(3.4rem, 13vw, 12rem)/.86 $display; font-stretch: 140%; letter-spacing: -0.045em; .mask { display: block; overflow: hidden; padding-bottom: .07em; } }
+  &__loader { position: absolute; z-index: 3; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: $black; color: $white; transition: opacity .55s ease, visibility .55s ease; }
+  &__loader--leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+  &__loader-mark { font: 700 1.5rem/1 $display; letter-spacing: -.08em; }
+  &__loader-copy { color: #AFAFAF; font: 500 .7rem/1.4 $body; text-transform: uppercase; letter-spacing: .16em; }
+  &__loader-track { width: 8rem; height: 1px; overflow: hidden; background: #383838; span { display: block; width: 40%; height: 100%; background: $white; animation: loader-pass 1.2s ease-in-out infinite alternate; } }
+  @keyframes loader-pass { to { transform: translateX(150%); } }
+  &__chapter { position: relative; z-index: 1; min-height: 100svh; padding: 8rem var(--pad) 2.5rem; display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; pointer-events: none; }
+  &__chapter--identity { min-height: 100svh; }
+  &__content { width: 100%; max-width: 1600px; margin-inline: auto; pointer-events: auto; transition: opacity .4s ease; }
+  &__content.is-waiting { opacity: 0; visibility: hidden; }
+  &__loc { color: #CACACA; margin-bottom: 1rem; font-size: .88rem; font-weight: 500; }
+  &__name { width: fit-content; max-width: 90vw; font: 700 clamp(3.4rem, 13vw, 12rem)/.86 $display; letter-spacing: -0.065em; }
   &__word { display: block; white-space: nowrap; }
   &__letter { display: inline-block; }
   &__role { color: #E0E0E0; font-size: clamp(.72rem, 1vw, .95rem); text-transform: uppercase; letter-spacing: .12em; margin-top: 1rem; span { color: #8F8F8F; padding-inline: .35em; } }
@@ -84,11 +91,11 @@ a { color: inherit; }
   &__work-list { margin: 1.2rem 0 1.5rem; border-top: 1px solid rgba($white, .28); li { border-bottom: 1px solid rgba($white, .2); } a { display: grid; grid-template-columns: 2.5rem 1fr auto; gap: .5rem; align-items: center; padding: .65rem 0; text-decoration: none; &:hover { color: #BDBDBD; } span:first-child { color: #969696; font-size: .75rem; } } }
 }
 @media (max-width: 699px) {
-  .hero { min-height: 360svh;
+  .hero { min-height: 100svh;
     &__stage { height: 100svh; }
-    &__chapter { min-height: 82svh; padding: 5rem var(--pad); align-items: center; }
-    &__chapter--identity { min-height: 100svh; align-items: flex-end; padding-bottom: 2rem; }
-    &__name { max-width: 92vw; font-size: clamp(3.6rem, 16vw, 6rem); }
+    &__chapter { min-height: 100svh; padding: 5rem var(--pad) 2rem; align-items: flex-end; }
+    &__chapter--identity { min-height: 100svh; }
+    &__name { max-width: 92vw; font-size: clamp(3.2rem, 14vw, 6rem); }
     &__role { max-width: 35ch; line-height: 1.8; letter-spacing: .08em; }
     &__row { gap: .8rem; }
     &__actions { gap: .35rem; .link { margin-left: .2rem; } }
@@ -103,7 +110,7 @@ a { color: inherit; }
 // Projects: an editorial project index gives direct, keyboard-accessible navigation.
 .projects { padding-top: clamp(5rem, 10vw, 9rem); }
 .projects::before { border-top: 1px solid rgba(#111111, .15); }
-.projects__eyebrow { color: $violet-text; text-transform: uppercase; letter-spacing: .14em; font-size: .75rem; margin-bottom: 1rem; }
+.projects__eyebrow { color: $violet-text; text-transform: uppercase; letter-spacing: .14em; font-size: .75rem; font-weight: 500; margin-bottom: 1rem; }
 .project-index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin: 0 0 2rem;
   a { display: flex; gap: .65rem; align-items: baseline; padding: .65rem .7rem; border: 1px solid transparent; text-decoration: none; color: $gray-text; font-size: .88rem; transition: color .2s, border-color .2s, background .2s;
     &:hover, &[aria-current='true'] { color: $white; border-color: rgba($violet, .45); background: rgba($violet, .08); }
@@ -117,7 +124,7 @@ a { color: inherit; }
 .project { display: grid; gap: 2rem; padding-block: clamp(3rem, 7vw, 6rem); border-top: 1px solid $line;
   &__visual { overflow: hidden; }
   &__info { display: grid; gap: 1.1rem; align-content: start; }
-  &__title { font: 700 clamp(2rem, 4.5vw, 3.8rem)/1 $display; font-stretch: 125%; letter-spacing: -0.02em; }
+  &__title { font: 600 clamp(2rem, 4.5vw, 3.8rem)/1 $display; letter-spacing: -0.02em; }
   &__desc { max-width: 52ch; color: $gray-text; }
   &__features { display: grid; gap: .3rem; li::before { content: '+ '; color: $violet-text; } }
   &__links { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .5rem; }
@@ -156,7 +163,7 @@ section > .h3 { margin-top: clamp(3rem, 7vw, 6rem); }
 
 // Contact / footer
 .contact { padding-bottom: var(--gap);
-  &__mail { display: inline-block; font: 700 clamp(1.4rem, 5.2vw, 4.2rem)/1.1 $display; font-stretch: 125%; letter-spacing: -0.02em; text-decoration-thickness: 2px; text-underline-offset: .15em; overflow-wrap: anywhere; &:hover { color: $violet-text; } }
+  &__mail { display: inline-block; font: 700 clamp(1.4rem, 5.2vw, 4.2rem)/1.1 $display; letter-spacing: -0.02em; text-decoration-thickness: 2px; text-underline-offset: .15em; overflow-wrap: anywhere; &:hover { color: $violet-text; } }
   &__links { margin-top: 2rem; display: flex; gap: 1.5rem; a { min-height: 44px; display: inline-flex; align-items: center; &:hover { color: $violet-text; } } } }
 .footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1.5rem var(--pad); border-top: 1px solid $line; color: $gray-text; font-size: .9rem; a:hover { color: $white; } }
 
