@@ -55,56 +55,48 @@ a { color: inherit; }
       a { padding: .5rem 0; &:hover { color: $violet-text; } } } }
   &__cta { @include up(800px) { border: 1px solid $white; border-radius: 999px; padding: .5rem 1.1rem !important; &:hover { background: $violet; border-color: $violet; color: $white !important; } } } }
 
-// A single-screen intro stages the particle formation before revealing identity.
-.hero { position: relative; background: $black; min-height: 100svh; overflow: clip; color: $white;
-  &__stage { position: sticky; z-index: 0; top: 0; height: 100svh; margin-bottom: -100svh; overflow: hidden; background: linear-gradient(180deg, #080808 0%, #101010 56%, #090909 100%); pointer-events: none; }
-  &__scene { position: absolute; inset: 0; pointer-events: none; canvas { display: block; } }
-  &__canvas { position: absolute; inset: 0; pointer-events: auto; }
-  &__fallback { position: absolute; top: 7%; left: 50%; width: min(44vw, 31rem); height: min(55vh, 31rem); transform: translateX(-50%); opacity: .82; background-image: radial-gradient(circle, rgba($white, .88) 1.1px, transparent 1.55px); background-size: 10px 10px; clip-path: polygon(35% 0, 65% 0, 100% 100%, 78% 100%, 68% 72%, 32% 72%, 22% 100%, 0 100%); }
-  &__waterline { position: absolute; inset: 61% 0 auto; height: 1px; background: linear-gradient(90deg, transparent, rgba($white, .25), transparent); }
-  &__loader { position: absolute; z-index: 3; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: $black; color: $white; transition: opacity .55s ease, visibility .55s ease; }
+// The scroll-pinned typography field forms on load, then shatters across its own section.
+.hero { position: relative; min-height: 185svh; overflow: clip; background: $black; color: $white;
+  &__stage { position: sticky; z-index: 0; top: 0; height: 100svh; margin-bottom: -100svh; overflow: hidden; background: #090909; }
+  &__scene, &__canvas { position: absolute; inset: 0; }
+  &__canvas { pointer-events: auto; }
+  &__scene { pointer-events: none; canvas { display: block; } }
+  &__loader { position: fixed; z-index: 40; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; background: #090909; color: $white; transition: opacity .55s ease, visibility .55s ease; }
   &__loader--leaving { opacity: 0; visibility: hidden; pointer-events: none; }
   &__loader-mark { font: 700 1.5rem/1 $display; letter-spacing: -.08em; }
   &__loader-copy { color: #AFAFAF; font: 500 .7rem/1.4 $body; text-transform: uppercase; letter-spacing: .16em; }
   &__loader-track { width: 8rem; height: 1px; overflow: hidden; background: #383838; span { display: block; width: 40%; height: 100%; background: $white; animation: loader-pass 1.2s ease-in-out infinite alternate; } }
   @keyframes loader-pass { to { transform: translateX(150%); } }
-  &__chapter { position: relative; z-index: 1; min-height: 100svh; padding: 8rem var(--pad) 2.5rem; display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; pointer-events: none; }
-  &__chapter--identity { min-height: 100svh; }
-  &__content { width: 100%; max-width: 1600px; margin-inline: auto; pointer-events: auto; transition: opacity .4s ease; }
-  &__content.is-waiting { opacity: 0; visibility: hidden; }
-  &__loc { color: #CACACA; margin-bottom: 1rem; font-size: .88rem; font-weight: 500; }
-  &__name { width: fit-content; max-width: 90vw; font: 700 clamp(3.4rem, 13vw, 12rem)/.86 $display; letter-spacing: -0.065em; }
-  &__word { display: block; white-space: nowrap; }
-  &__letter { display: inline-block; }
-  &__role { color: #E0E0E0; font-size: clamp(.72rem, 1vw, .95rem); text-transform: uppercase; letter-spacing: .12em; margin-top: 1rem; span { color: #8F8F8F; padding-inline: .35em; } }
-  &__row { display: grid; gap: 1.25rem; margin-top: 1.25rem; @include up(900px) { grid-template-columns: minmax(18rem, .9fr) 1.1fr; align-items: end; } }
-  &__lead { max-width: 44ch; color: #B5B5B5; font-size: clamp(1rem, 1.25vw, 1.2rem); }
-  &__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; @include up(900px) { justify-content: flex-end; } .link { margin: 0 0 0 .4rem; } }
-  &__scroll-cue { margin-top: 1.2rem; color: #8F8F8F; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; span { margin-left: .4rem; color: $white; } }
-  &__panel { width: min(38rem, 45vw); pointer-events: auto; padding: 1.5rem 0 1.5rem 1.5rem; border-left: 1px solid rgba($white, .48); background: linear-gradient(90deg, rgba($black, .38), transparent); h2 { max-width: 13ch; font: 600 clamp(2rem, 4.2vw, 4rem)/1.02 $display; letter-spacing: -.025em; margin: .8rem 0 1rem; } p:not(.hero__chapter-label) { max-width: 44ch; color: #C2C2C2; } }
-  &__panel--left { margin-right: auto; }
-  &__panel--right { margin-left: auto; }
-  &__chapter-label { color: #A5A5A5; font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; }
-  &__side-note { color: #929292; font: 400 clamp(.8rem, 1.1vw, 1rem)/1.5 $body; text-align: right; letter-spacing: .04em; }
-  &__side-note--left { text-align: left; }
-  &__stack { margin: 1.5rem 0; border-top: 1px solid rgba($white, .25); > div { display: grid; grid-template-columns: minmax(7.5rem, .7fr) 1.5fr; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid rgba($white, .2); } dt { font-size: .78rem; color: #F0F0F0; text-transform: uppercase; letter-spacing: .08em; } dd { color: #AFAFAF; font-size: .9rem; } }
-  &__work-list { margin: 1.2rem 0 1.5rem; border-top: 1px solid rgba($white, .28); li { border-bottom: 1px solid rgba($white, .2); } a { display: grid; grid-template-columns: 2.5rem 1fr auto; gap: .5rem; align-items: center; padding: .65rem 0; text-decoration: none; &:hover { color: #BDBDBD; } span:first-child { color: #969696; font-size: .75rem; } } }
+  &__scroll-cue { position: absolute; z-index: 2; inset: auto var(--pad) 1.8rem auto; margin: 0; text-align: right; pointer-events: none; color: #929292; font: 500 .68rem/1.4 $body; letter-spacing: .15em; text-transform: uppercase; opacity: 0; transition: opacity .35s ease; &.is-ready { opacity: 1; } span { display: block; color: $white; font-size: 1rem; margin-top: .2rem; } }
+  &__fallback-copy { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .8rem; padding: var(--pad); text-align: center; color: $white; strong { font: 700 clamp(2.2rem, 9vw, 8rem)/1 $display; letter-spacing: -.06em; } span { font: 500 clamp(.7rem, 1.5vw, 1rem)/1.4 $body; letter-spacing: .18em; } }
+  &__chapter { position: sticky; z-index: 1; top: 0; display: flex; align-items: flex-end; width: 100%; height: 100svh; margin-bottom: -100svh; padding: 7rem var(--pad) 3.5rem; pointer-events: none; }
+  &__beats { position: relative; width: 100%; height: 100%; pointer-events: none; }
+  &__beat { position: absolute; width: min(31rem, 48vw); opacity: 0; visibility: hidden; pointer-events: auto; }
+  &__beat--role { top: 25%; right: 8%; text-align: right; }
+  &__beat--lead { top: 43%; left: 9%; }
+  &__beat--profile { top: 60%; right: 11%; text-align: right; }
+  &__beat--links { left: 12%; bottom: 11%; width: min(45rem, 65vw); }
+  &__beats.is-fallback { position: relative; display: grid; align-content: center; gap: 1.1rem; height: auto; max-height: 100%; padding-block: 1rem; overflow-y: auto; pointer-events: auto; }
+  &__beats.is-fallback &__beat { position: relative; inset: auto; width: 100%; text-align: left; opacity: 1; visibility: visible; }
+  &__index { display: block; margin-bottom: .7rem; color: #969696; font: 500 .68rem/1.4 $body; letter-spacing: .17em; }
+  &__loc { color: #B8B8B8; font: 500 .72rem/1.4 $body; letter-spacing: .16em; text-transform: uppercase; }
+  &__role { color: #D1D1D1; font: 500 clamp(.78rem, 1.2vw, .95rem)/1.5 $body; letter-spacing: .08em; text-transform: uppercase; }
+  &__lead { max-width: 42ch; color: #D0D0D0; font: 500 clamp(1.1rem, 2.3vw, 1.8rem)/1.35 $display; letter-spacing: -.025em; }
+  &__profile .hero__lead { margin-bottom: .8rem; }
+  &__loc { display: block; color: #AFAFAF; font: 500 .76rem/1.5 $body; letter-spacing: .06em; }
+  &__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .1rem .8rem; }
 }
-@media (max-width: 699px) {
-  .hero { min-height: 100svh;
-    &__stage { height: 100svh; }
-    &__chapter { min-height: 100svh; padding: 5rem var(--pad) 2rem; align-items: flex-end; }
-    &__chapter--identity { min-height: 100svh; }
-    &__name { max-width: 92vw; font-size: clamp(3.2rem, 14vw, 6rem); }
-    &__role { max-width: 35ch; line-height: 1.8; letter-spacing: .08em; }
-    &__row { gap: .8rem; }
-    &__actions { gap: .35rem; .link { margin-left: .2rem; } }
-    &__lead { max-width: 36ch; }
-    &__panel { width: 100%; max-width: 34rem; padding-left: 1rem; background: linear-gradient(90deg, rgba($black, .72), rgba($black, .28)); h2 { font-size: clamp(2rem, 9vw, 3.2rem); } }
-    &__side-note { display: none; }
-    &__stack > div { grid-template-columns: 1fr; gap: .2rem; }
-    &__fallback { top: 6%; width: 67vw; height: 38vh; }
-  }
+@media (max-width: 699px) { .hero { min-height: 175svh; } }
+@media (max-width: 760px) {
+  .hero__chapter { align-items: stretch; padding: 5.5rem var(--pad) 4.5rem; }
+  .hero__beat { width: min(84vw, 32rem); }
+  .hero__beat--role { top: 24%; right: 4%; }
+  .hero__beat--lead { top: 40%; left: 4%; }
+  .hero__beat--profile { top: 57%; right: 4%; text-align: right; }
+  .hero__beat--links { left: 4%; bottom: 8%; width: 92%; }
+  .hero__lead { font-size: 1.1rem; }
+  .hero__actions { gap: .1rem .3rem; }
+  .hero__actions .link { margin-right: .55rem; }
 }
 
 // Projects: an editorial project index gives direct, keyboard-accessible navigation.

@@ -1,5 +1,4 @@
-import { Component, lazy, Suspense, useCallback, useLayoutEffect, useRef, useState } from 'react'
-import gsap from 'gsap'
+import { Component, lazy, Suspense, useCallback, useRef, useState } from 'react'
 import { profile } from '../../data/content'
 
 const Hero3D = lazy(() => import('../../components/three/Hero3D'))
@@ -8,68 +7,65 @@ class SceneBoundary extends Component {
   state = { failed: false }
   static getDerivedStateFromError() { return { failed: true } }
   componentDidCatch() { this.props.onError?.() }
-  render() { return this.state.failed ? <div className="hero__fallback" aria-hidden="true" /> : this.props.children }
+  render() { return this.state.failed ? null : this.props.children }
 }
 
 export default function Hero() {
-  const root = useRef(null)
   const [intro, setIntro] = useState('loading')
-  const completeIntro = useCallback(() => setIntro('complete'), [])
+  const contentRef = useRef(null)
   const sceneReady = useCallback(() => setIntro((state) => state === 'loading' ? 'forming' : state), [])
-
-  useLayoutEffect(() => {
-    if (intro !== 'complete') return undefined
-    const ctx = gsap.context(() => {
-      const motion = gsap.matchMedia()
-      motion.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.timeline({ defaults: { ease: 'power3.out' } })
-          .from('.hero__letter', { yPercent: 115, opacity: 0, duration: 0.8, stagger: 0.035 })
-          .from('.hero__in', { opacity: 0, y: 14, duration: 0.7, stagger: 0.08 }, '-=0.4')
-      })
-    }, root)
-    return () => ctx.revert()
-  }, [intro])
+  const completeIntro = useCallback(() => setIntro('complete'), [])
+  const failIntro = useCallback(() => setIntro('fallback'), [])
 
   return (
-    <section id="top" className="hero" ref={root} aria-labelledby="hero-title">
-      <div className="hero__stage" aria-hidden="true">
-        <div className="hero__scene">
-          <SceneBoundary onError={completeIntro}>
-            <Suspense fallback={<div className="hero__fallback" aria-hidden="true" />}>
-              <Hero3D onReady={sceneReady} onIntroComplete={completeIntro} onError={completeIntro} />
+    <section id="top" className="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" className="sr">Full-stack developer</h1>
+
+      <div className="hero__stage">
+        <div className="hero__scene" aria-hidden="true">
+          <SceneBoundary onError={failIntro}>
+            <Suspense fallback={<div className="hero__fallback-copy"><strong>FULL STACK</strong><span>DEVELOPER</span></div>}>
+              <Hero3D onReady={sceneReady} onIntroComplete={completeIntro} onError={failIntro} revealRef={contentRef} />
             </Suspense>
           </SceneBoundary>
         </div>
-        <span className="hero__waterline" />
+        <p className={`hero__scroll-cue${intro === 'complete' ? ' is-ready' : ''}`} aria-hidden="true">Scroll to explore <span>↓</span></p>
       </div>
 
-      {intro !== 'complete' && (
+      <div className="hero__chapter hero__chapter--identity">
+        <div ref={contentRef} className={`hero__beats${intro === 'fallback' ? ' is-fallback' : ''}`}>
+          <div className="hero__beat hero__beat--role" aria-label="Full-stack developer, Agentic AI and Creative frontend">
+            <span className="hero__index">01 / WHAT I DO</span>
+            <p className="hero__role">Full-stack developer <span aria-hidden="true">/</span><br />Agentic AI <span aria-hidden="true">/</span> Creative frontend</p>
+          </div>
+          <div className="hero__beat hero__beat--lead">
+            <span className="hero__index">02 / APPROACH</span>
+            <p className="hero__lead">Building interactive digital experiences, full-stack applications, and AI-powered tools.</p>
+          </div>
+          <div className="hero__beat hero__beat--profile">
+            <span className="hero__index">03 / CURRENTLY</span>
+            <p className="hero__lead">Pursuing my MCA at SGSITS Indore<br />Working at Agniro</p>
+            <span className="hero__loc">{profile.location}</span>
+          </div>
+          <div className="hero__beat hero__beat--links">
+            <span className="hero__index">04 / EXPLORE</span>
+            <div className="hero__actions">
+              <a className="btn btn--solid" href="#projects">See projects</a>
+              <a className="btn" href="#contact">Contact me</a>
+              <a className="link" href={profile.github} target="_blank" rel="noopener noreferrer">GitHub<span className="sr"> (opens in new tab)</span></a>
+              <a className="link" href={profile.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn<span className="sr"> (opens in new tab)</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {(intro === 'loading' || intro === 'forming') && (
         <div className={`hero__loader${intro === 'forming' ? ' hero__loader--leaving' : ''}`} role="status" aria-live="polite">
-          <span className="hero__loader-mark">AR</span>
-          <span className="hero__loader-copy">{intro === 'loading' ? 'Preparing the scene' : 'Forming the mark'}</span>
+          <span className="hero__loader-mark">01</span>
+          <span className="hero__loader-copy">{intro === 'loading' ? 'Preparing the scene' : 'Assembling the name'}</span>
           <span className="hero__loader-track"><span /></span>
         </div>
       )}
-
-      <div className="hero__chapter hero__chapter--identity">
-        <div className={`hero__content${intro === 'complete' ? ' is-ready' : ' is-waiting'}`}>
-          <p className="hero__in hero__loc">{profile.location}</p>
-          <h1 id="hero-title" className="hero__name" aria-label="Arun Rajput">
-            {['ARUN', 'RAJPUT'].map((word) => <span className="hero__word" key={word} aria-hidden="true">{Array.from(word, (char, index) => <span className="hero__letter" key={`${word}-${index}`}>{char}</span>)}</span>)}
-          </h1>
-          <p className="hero__in hero__role">Full-stack developer <span aria-hidden="true">/</span> Agentic AI <span aria-hidden="true">/</span> Creative frontend</p>
-          <div className="hero__row">
-            <p className="hero__in hero__lead">Building interactive digital experiences, full-stack applications, and AI-powered tools. Currently pursuing my MCA at SGSITS Indore and working at Agniro.</p>
-            <div className="hero__in hero__actions">
-              <a className="btn btn--solid" href="#projects">See projects</a>
-              <a className="btn" href="#contact">Contact me</a>
-              <a className="link" href={profile.github} target="_blank" rel="noopener noreferrer">GitHub</a>
-              <a className="link" href={profile.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
-            </div>
-          </div>
-          <p className="hero__scroll-cue" aria-hidden="true">Scroll to explore <span>↓</span></p>
-        </div>
-      </div>
     </section>
   )
 }
